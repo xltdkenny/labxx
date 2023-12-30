@@ -10,11 +10,11 @@
 
 int server_sock = -1;
 int client_socket = -1;
-volatile sig_atomic_t running = 1;
+volatile sig_atomic_t wasSigHup = 1;
 
 void handleTerminationSignal(int sig) 
 {
-    running = 0;
+    wasSigHup = 0;
 }
 
 int main() 
@@ -25,7 +25,7 @@ int main()
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handleTerminationSignal;
-    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGHUP, &sa, nullptr);
 
     server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) 
@@ -56,7 +56,7 @@ int main()
     sigaddset(&blockedMask, SIGHUP);
     sigprocmask(SIG_BLOCK, &blockedMask, &origMask);
 
-    while (running) 
+    while (wasSigHup) 
     {
         fd_set read_fds;
         FD_ZERO(&read_fds);
@@ -77,10 +77,14 @@ int main()
                 }
         }
 
-        if (pselect(max_fd + 1, &read_fds, NULL, NULL, NULL, &origMask) < 0) 
+        if (pselect(max_fd + 1, &read_fds, nullptr, nullptr, nullptr, &origMask) < 0) 
         {
             if (errno == EINTR) 
             {
+                if (!wasSigHup)
+                {
+                printf("SIGHUP");
+                }
                 continue;
             } 
             
@@ -92,7 +96,7 @@ int main()
         }
 
         if (FD_ISSET(server_sock, &read_fds)) {
-            if ((new_socket = accept(server_sock, NULL, NULL)) < 0) 
+            if ((new_socket = accept(server_sock, nullptr, nullptr)) < 0) 
             {
                 perror("accept");
                 exit(EXIT_FAILURE);
