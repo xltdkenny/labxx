@@ -1,9 +1,9 @@
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstdlib>
+#include <csignal>
+#include <cerrno>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
